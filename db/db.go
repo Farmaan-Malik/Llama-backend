@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
 func InitDb() *mongox.Collection[store.User] {
@@ -28,9 +26,6 @@ func InitDb() *mongox.Collection[store.User] {
 	client := mongox.NewClient(c, &mongox.Config{})
 	db := client.NewDatabase("user")
 	userCol := mongox.NewCollection[store.User](db, "users_profile")
-	if err := client.Client().Ping(context.TODO(), readpref.Primary()); err != nil {
-		panic(err)
-	}
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
 	return userCol
 }
