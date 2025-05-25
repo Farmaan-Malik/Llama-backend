@@ -1,10 +1,11 @@
 package main
 
 import (
-	"example/gollama-app/db"
-	"example/gollama-app/routes"
-	"example/gollama-app/store"
 	"fmt"
+
+	"github.com/Farmaan-Malik/gollama-app/db"
+	"github.com/Farmaan-Malik/gollama-app/routes"
+	"github.com/Farmaan-Malik/gollama-app/store"
 
 	"github.com/gin-gonic/gin"
 )

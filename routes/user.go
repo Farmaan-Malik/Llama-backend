@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"example/gollama-app/store"
 	"fmt"
+
+	"github.com/Farmaan-Malik/gollama-app/store"
 
 	"github.com/gin-gonic/gin"
 )

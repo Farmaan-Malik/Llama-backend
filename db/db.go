@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"example/gollama-app/store"
 	"fmt"
 	"os"
+
+	"github.com/Farmaan-Malik/gollama-app/store"
 
 	"github.com/chenmingyong0423/go-mongox/v2"
 	"github.com/joho/godotenv"

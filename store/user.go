@@ -3,9 +3,10 @@ package store
 import (
 	"context"
 	"errors"
-	"example/gollama-app/utils"
 	"fmt"
 	"time"
+
+	"github.com/Farmaan-Malik/gollama-app/utils"
 
 	"github.com/chenmingyong0423/go-mongox/v2/builder/query"
 	"go.mongodb.org/mongo-driver/v2/bson"

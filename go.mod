@@ -1,4 +1,4 @@
-module example/gollama-app
+module github.com/Farmaan-Malik/gollama-app
 
 go 1.23.0
 
