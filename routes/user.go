@@ -8,7 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SignupUserHandler(ctx *gin.Context) {
+type Api struct {
+	Store *store.Store
+}
+
+func (a *Api) SignupUserHandler(ctx *gin.Context) {
 	var u store.User
 	err := ctx.ShouldBindJSON(&u)
 	if err != nil {
@@ -16,7 +20,7 @@ func SignupUserHandler(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"success": false, "message": err})
 		return
 	}
-	doc, err := u.CreateUser()
+	doc, err := a.Store.CreateUser(&u)
 	if err != nil {
 		fmt.Println("error while creating document ")
 		ctx.JSON(400, gin.H{"success": false, "message": fmt.Sprint(err)})
@@ -25,14 +29,14 @@ func SignupUserHandler(ctx *gin.Context) {
 	ctx.JSON(201, gin.H{"success": true, "data": doc})
 }
 
-func LoginUserHandler(ctx *gin.Context) {
+func (a *Api) LoginUserHandler(ctx *gin.Context) {
 	var payload store.LoginPayload
 	err := ctx.ShouldBindJSON(&payload)
 	if err != nil {
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	_, err = payload.LoginUser()
+	_, err = a.Store.LoginUser(&payload)
 	if err != nil {
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return

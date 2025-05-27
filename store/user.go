@@ -28,9 +28,9 @@ type LoginPayload struct {
 	Password string `json:"password"`
 }
 
-func (u *User) CreateUser() (*mongo.InsertOneResult, error) {
-	col := Data.UserCol
-	exists, err := col.Finder().Filter(query.Eq("email", u.Email)).FindOne(context.Background())
+func (s *Store) CreateUser(u *User) (*mongo.InsertOneResult, error) {
+
+	exists, err := s.UserCol.Finder().Filter(query.Eq("email", u.Email)).FindOne(context.Background())
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			fmt.Println("User Doesnt exist")
@@ -47,14 +47,14 @@ func (u *User) CreateUser() (*mongo.InsertOneResult, error) {
 		return nil, err
 	}
 	u.Password = hashedPassword
-	result, err := col.Creator().InsertOne(context.Background(), u)
+	result, err := s.UserCol.Creator().InsertOne(context.Background(), u)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (p LoginPayload) LoginUser() (bool, error) {
+func (s *Store) LoginUser(p *LoginPayload) (bool, error) {
 	col := Data.UserCol
 	exists, err := col.Finder().Filter(query.Eq("email", p.Email)).FindOne(context.Background())
 	if err != nil {

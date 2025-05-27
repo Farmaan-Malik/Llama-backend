@@ -3,8 +3,10 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/ollama"
@@ -27,20 +29,34 @@ type Options struct {
 }
 
 type Ask struct {
-	UserId           string
-	QuestionsAsked   []string
+	UserId string
+	// QuestionsAsked   []string
 	CorrectResponses int
-	Subject          string
-	Standard         string
+	// Subject          string
+	// Standard         string
 }
 
-func (a *Ask) GetQuestion() {
+type InititalPrompt struct {
+	UserId   string
+	Standard string
+	Subject  string
+}
+
+func (s *Store) GetQuestion(a *Ask) error {
 	ctx := context.Background()
-	askedQsJSON, err := json.Marshal(a.QuestionsAsked)
+	data, err := s.Redis.HGetAll(context.Background(), a.UserId).Result()
 	if err != nil {
-		fmt.Println("Error marshaling asked questions:", err)
-		return
+		fmt.Println("Error getting data from redis: ", err)
+		return err
 	}
+	if len(data) == 0 {
+		fmt.Println("No data found for user:", a.UserId)
+		return errors.New(fmt.Sprint("No data found for user: ", a.UserId))
+	}
+	subject := data["subject"]
+	questionsAsked := data["questionsAsked"]
+	standard := data["standard"]
+	fmt.Println("data: ", subject, questionsAsked, standard)
 	prompt := fmt.Sprintf(`
 You are an enthusiastic game show host for an educational quiz show, similar in style to "Who Wants to Be a Millionaire." Your job is to ask engaging multiple-choice questions to the user. The quiz should be based on the provided subject and suitable for the specified grade level.
 
@@ -73,7 +89,7 @@ Your job:
 - Generate a brand new question that is not in the asked_questions list.
 - Ensure the content matches the subject and standard.
 - Write in an engaging and conversational tone for the host's dialogue fields.
-`, a.Subject, a.Standard, string(askedQsJSON))
+`, subject, standard, questionsAsked)
 
 	llm, err := ollama.New(ollama.WithModel("llama3.2"))
 	if err != nil {
@@ -97,4 +113,22 @@ Your job:
 	fmt.Println(r.Options.D)
 	fmt.Println(r.PositiveDialogue)
 	fmt.Println(r.NegativeDialogue)
+	return nil
+}
+
+func (s *Store) GetInitialData(i *InititalPrompt) {
+	ctx := context.Background()
+	jsonBytes, err := json.Marshal([]string{})
+	if err != nil {
+		fmt.Println("error marshalling questions: ", err)
+	}
+	jsonString := string(jsonBytes)
+	cmd := s.Redis.HSet(ctx, i.UserId, map[string]any{
+		"questionsAsked": jsonString,
+		"standard":       i.Standard,
+		"subject":        i.Subject,
+	})
+	boolCmd := s.Redis.Expire(ctx, i.UserId, 90*time.Minute)
+	fmt.Println(cmd)
+	fmt.Println(boolCmd)
 }
