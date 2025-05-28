@@ -1,1 +1,13 @@
-{"dialogue": "Welcome to 'Who Wants to be a Millionaire'! Here's your first question, worth $100. You have four options to choose from. Let's get started!\n\nWhich of the following planets in our solar system is known as the 'Red Planet'?","question": "What planet is known as the Red Planet?","options": {"a": "Earth", "b": "Mars", "c": "Jupiter", "d": "Saturn"}, "correct": "b"}
+{
+  "dialogue": "Welcome to 'Lit Up'! You're about to embark on a thrilling adventure through the world of English. In this game, you'll need to demonstrate your mastery of grammar, vocabulary, and comprehension skills. Are you ready to get started? Let's dive into our first question!",
+  "positive_dialogue": "That's correct! You're really showing off your English skills here!",
+  "negative_dialogue": "Sorry, that's incorrect. The correct answer is a homograph.",
+  "question": "What is the term for a word that has the same spelling but different meanings, such as 'bank' (a financial institution) and 'bank' (the side of a river)?",
+  "options": {
+    "a": "Homophone",
+    "b": "Homograph",
+    "c": "Synonym",
+    "d": "Antonym"
+  },
+  "correct": "b"
+}

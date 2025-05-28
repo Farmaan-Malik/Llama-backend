@@ -3,12 +3,9 @@ package store
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/ollama"
 )
 
@@ -18,7 +15,7 @@ type Question struct {
 	NegativeDialogue string  `json:"negative_dialogue"`
 	Question         string  `json:"question"`
 	Options          Options `json:"options"`
-	Answer           string  `json:"answer"`
+	Correct          string  `json:"correct"`
 }
 
 type Options struct {
@@ -29,11 +26,8 @@ type Options struct {
 }
 
 type Ask struct {
-	UserId string
-	// QuestionsAsked   []string
+	UserId           string
 	CorrectResponses int
-	// Subject          string
-	// Standard         string
 }
 
 type InititalPrompt struct {
@@ -42,69 +36,55 @@ type InititalPrompt struct {
 	Subject  string
 }
 
-func (s *Store) GetQuestion(a *Ask) error {
-	ctx := context.Background()
-	data, err := s.Redis.HGetAll(context.Background(), a.UserId).Result()
+func (s *Store) GetQuestion(ctx context.Context, a *Ask) (*Question, error) {
+	data, err := s.Redis.HGetAll(ctx, a.UserId).Result()
 	if err != nil {
-		fmt.Println("Error getting data from redis: ", err)
-		return err
+		return nil, fmt.Errorf("error getting data from redis: %s", err)
+
 	}
 	if len(data) == 0 {
 		fmt.Println("No data found for user:", a.UserId)
-		return errors.New(fmt.Sprint("No data found for user: ", a.UserId))
+		return nil, fmt.Errorf("no data found for user: %s", a.UserId)
 	}
 	subject := data["subject"]
 	questionsAsked := data["questionsAsked"]
 	standard := data["standard"]
 	fmt.Println("data: ", subject, questionsAsked, standard)
-	prompt := fmt.Sprintf(`
-You are an enthusiastic game show host for an educational quiz show, similar in style to "Who Wants to Be a Millionaire." Your job is to ask engaging multiple-choice questions to the user. The quiz should be based on the provided subject and suitable for the specified grade level.
+	prompt := fmt.Sprintf(`subject: %s
+	standard: %s
+	questionsAsked:%s`, subject, standard, questionsAsked)
 
-IMPORTANT:
-- Avoid any questions that are already included in the asked_questions list.
-- Only return a well-formatted JSON object. Do not include markdown, code blocks, or commentary.
-- The JSON must follow the structure below.
-
-Inputs:
-- subject: %s
-- standard: %s
-- asked_questions: %s
-
-Output JSON structure:
-{
-  "dialogue": "An exciting welcome line from you, the host, leading into the question.",
-  "question": "A unique and clear question related to the subject and suitable for the given standard.",
-  "options": {
-    "a": "Option A",
-    "b": "Option B",
-    "c": "Option C",
-    "d": "Option D"
-  },
-  "correct": "b", // The correct option key
-  "positive_dialogue": "What you say when the user gets it right!",
-  "negative_dialogue": "What you say when the user gets it wrong!"
-}
-
-Your job:
-- Generate a brand new question that is not in the asked_questions list.
-- Ensure the content matches the subject and standard.
-- Write in an engaging and conversational tone for the host's dialogue fields.
-`, subject, standard, questionsAsked)
-
-	llm, err := ollama.New(ollama.WithModel("llama3.2"))
+	llm, err := ollama.New(ollama.WithModel("MrQuizzler"))
 	if err != nil {
-		log.Fatal("Failed to initiate LLM model")
+		return nil, fmt.Errorf("error communicating with model: %s", err)
 	}
-	res, err := llm.Call(ctx, prompt, llms.WithTemperature(0.8))
+	res, err := llm.Call(ctx, prompt)
 	if err != nil {
-		log.Fatal("Failed to call LLM model")
+		return nil, fmt.Errorf("error generating question: %s", err)
 	}
 	var r Question
 	err = json.Unmarshal([]byte(res), &r)
 	if err != nil {
-		log.Fatalf("Failed to unmarshal res %v", err)
+		return nil, fmt.Errorf("error unmarshalling questions: %s", err)
 	}
-
+	if questionsAsked == "" {
+		questionsAsked = "[]"
+	}
+	var askedQuestions []string
+	err = json.Unmarshal([]byte(questionsAsked), &askedQuestions)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling questions for redis: %s", err)
+	}
+	askedQuestions = append(askedQuestions, r.Question)
+	updatedQuestion, err := json.Marshal(askedQuestions)
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling updated questionsAsked: %s", err)
+	}
+	cmd := s.Redis.HSet(ctx, a.UserId, "questionsAsked", string(updatedQuestion))
+	if err := cmd.Err(); err != nil {
+		return nil, fmt.Errorf("error saving updated questionsAsked to Redis: %s", err)
+	}
+	fmt.Println(cmd)
 	fmt.Println(r.Dialogue)
 	fmt.Println(r.Question)
 	fmt.Println(r.Options.A)
@@ -113,14 +93,15 @@ Your job:
 	fmt.Println(r.Options.D)
 	fmt.Println(r.PositiveDialogue)
 	fmt.Println(r.NegativeDialogue)
-	return nil
+	fmt.Println("Correct: ", r.Correct)
+	return &r, nil
 }
 
-func (s *Store) GetInitialData(i *InititalPrompt) {
+func (s *Store) GetInitialData(i *InititalPrompt) error {
 	ctx := context.Background()
 	jsonBytes, err := json.Marshal([]string{})
 	if err != nil {
-		fmt.Println("error marshalling questions: ", err)
+		return fmt.Errorf("error marshalling question: %s", err)
 	}
 	jsonString := string(jsonBytes)
 	cmd := s.Redis.HSet(ctx, i.UserId, map[string]any{
@@ -128,7 +109,11 @@ func (s *Store) GetInitialData(i *InititalPrompt) {
 		"standard":       i.Standard,
 		"subject":        i.Subject,
 	})
+	if err := cmd.Err(); err != nil {
+		return fmt.Errorf("error saving updated questionsAsked to Redis: %s", err)
+	}
 	boolCmd := s.Redis.Expire(ctx, i.UserId, 90*time.Minute)
 	fmt.Println(cmd)
 	fmt.Println(boolCmd)
+	return nil
 }
