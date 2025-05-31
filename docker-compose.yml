@@ -1,0 +1,28 @@
+version: '3'
+services:
+    mongo-db:
+      ports:
+        - 27017:27017
+      image: mongo
+      restart: always
+      environment:
+       MONGO_INITDB_ROOT_USERNAME: root
+       MONGO_INITDB_ROOT_PASSWORD: example
+      volumes:
+        - mongodata:/var/lib/mongodata/data
+    
+    gollama:
+      ports:
+        - 8080:8080
+      build:
+        context: .
+        dockerfile: Dockerfile
+      environment:
+        ME_CONFIG_MONGODB_ADMINUSERNAME: root
+        ME_CONFIG_MONGODB_ADMINPASSWORD: example
+        MONGO_URI: mongodb://root:example@mongo-db:27017/
+      depends_on:
+        - mongo-db
+    
+volumes:
+  mongodata:
