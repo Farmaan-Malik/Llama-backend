@@ -26,22 +26,25 @@ type Options struct {
 }
 
 type Ask struct {
-	UserId           string
-	CorrectResponses int
+	UserId           string `json:"user"`
+	CorrectResponses int    `json:"correctResponses"`
 }
 
 type InititalPrompt struct {
-	UserId   string
-	Standard string
-	Subject  string
+	UserId   string `json:"user"`
+	Standard string `json:"standard"`
+	Subject  string `json:"subject"`
 }
 
 func (s *Store) GetQuestion(ctx context.Context, a *Ask) (*Question, error) {
 	data, err := s.Redis.HGetAll(ctx, a.UserId).Result()
 	if err != nil {
+		fmt.Println("Redis error: ", err)
 		return nil, fmt.Errorf("error getting data from redis: %s", err)
 
 	}
+	fmt.Println("Data: ", data)
+	fmt.Println("Length: ", len(data))
 	if len(data) == 0 {
 		fmt.Println("No data found for user:", a.UserId)
 		return nil, fmt.Errorf("no data found for user: %s", a.UserId)
@@ -56,10 +59,12 @@ func (s *Store) GetQuestion(ctx context.Context, a *Ask) (*Question, error) {
 
 	llm, err := ollama.New(ollama.WithModel("MrQuizzler"))
 	if err != nil {
+		fmt.Println("Ollama error: ", err)
 		return nil, fmt.Errorf("error communicating with model: %s", err)
 	}
 	res, err := llm.Call(ctx, prompt)
 	if err != nil {
+		fmt.Println("Ollama error while calling: ", err)
 		return nil, fmt.Errorf("error generating question: %s", err)
 	}
 	var r Question

@@ -1,0 +1,7 @@
+GET http://localhost:8080/user/question
+Content-Type: "application/json"
+
+{
+    "user":"683f1d756512501b3279797e",
+	"correctResponses":1
+}

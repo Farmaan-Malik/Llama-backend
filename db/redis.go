@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -16,10 +15,10 @@ type UserSession struct {
 }
 
 func InitRedis() *redis.Client {
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic(err)
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	panic(err)
+	// }
 	redisPassword, ok := os.LookupEnv("REDIS_PW")
 	if !ok {
 		log.Fatal("environment variable not found (redis_pw)")
