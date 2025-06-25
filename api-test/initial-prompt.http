@@ -2,7 +2,7 @@ POST http://localhost:8080/user/initial
 Content-Type: "application/json"
 
 {
-	"user":  "683f1d756512501b3279797e",
+	"user":  "683b28e606b6f7781eca6e6a",
 	"standard": "7",
 	"subject":  "Math"
 }

@@ -57,7 +57,7 @@ func (s *Store) GetQuestion(ctx context.Context, a *Ask) (*Question, error) {
 	standard: %s
 	questionsAsked:%s`, subject, standard, questionsAsked)
 
-	llm, err := ollama.New(ollama.WithModel("MrQuizzler"))
+	llm, err := ollama.New(ollama.WithModel("MrQuizzler"), ollama.WithServerURL("http://ollama:11434"))
 	if err != nil {
 		fmt.Println("Ollama error: ", err)
 		return nil, fmt.Errorf("error communicating with model: %s", err)

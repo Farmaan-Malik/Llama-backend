@@ -53,6 +53,7 @@ func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 		return
 	}
 	if err := a.Store.GetInitialData(payload); err != nil {
+		fmt.Println(err)
 		ctx.JSON(500, gin.H{"success": false, "message": "error saving initial data"})
 		return
 	}
