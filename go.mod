@@ -5,7 +5,6 @@ go 1.23.0
 require (
 	github.com/chenmingyong0423/go-mongox/v2 v2.6.0
 	github.com/gin-gonic/gin v1.10.1
-	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/tmc/langchaingo v0.1.13
 	go.mongodb.org/mongo-driver/v2 v2.2.1
@@ -28,6 +27,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
