@@ -25,17 +25,18 @@ services:
     depends_on:
       - mongo-db
 
-  ollama:
-    image: ollama/ollama
-    ports:
-      - 11434:11434
-    volumes:
-      - ./Modelfile:/Modelfile
-      - ollama_models:/root/.ollama
-    entrypoint: ["/bin/sh", "-c", "
-      ollama serve &
-      tail -f /dev/null
-      "]
+  # ollama:
+  #   image: ollama/ollama
+  #   ports:
+  #     - 11434:11434
+  #   volumes:
+  #     - ./Modelfile:/Modelfile
+  #     - ollama_models:/root/.ollama
+  #   entrypoint: [
+  #     "/bin/sh", "-c", "
+  #     ollama serve &
+  #     tail -f /dev/null
+  #     "]
 
 volumes:
   mongodata:

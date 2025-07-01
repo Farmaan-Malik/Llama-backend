@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/Farmaan-Malik/gollama-app/internals/store"
 	"github.com/gin-gonic/gin"
@@ -70,16 +71,31 @@ func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 }
 
 func (a *Api) GetQuestionHandler(ctx *gin.Context) {
-	var payload *store.Ask
-	err := ctx.ShouldBindJSON(&payload)
+	userId := ctx.Query("userId")
+	correctStr := ctx.DefaultQuery("correctResponses", "0")
+
+	correct, err := strconv.Atoi(correctStr)
 	if err != nil {
-		ctx.JSON(401, gin.H{"success": false, "message": "incorrect data format"})
+		ctx.JSON(400, gin.H{"success": false, "message": "correctResponses must be a number"})
 		return
 	}
+
+	if userId == "" {
+		ctx.JSON(400, gin.H{"success": false, "message": "userId is required"})
+		return
+	}
+
+	payload := &store.Ask{
+		UserId:           userId,
+		CorrectResponses: correct,
+	}
+
+	// Setup SSE headers
 	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
 	ctx.Writer.Header().Set("Cache-Control", "no-cache")
 	ctx.Writer.Header().Set("Connection", "keep-alive")
 	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
 	_, err = a.Store.ModelStore.GetQuestion(ctx.Writer, context.Background(), payload)
 	if err != nil {
 		fmt.Fprintf(ctx.Writer, "event: error\ndata: %s\n\n", err.Error())

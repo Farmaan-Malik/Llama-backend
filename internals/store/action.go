@@ -78,11 +78,12 @@ func (s *ModelStore) GetQuestion(w http.ResponseWriter, ctx context.Context, a *
 	var prompt string
 	if questionNumber == 1 {
 		prompt = fmt.Sprintf(`
-You are a fun and energetic game show host speaking directly to a contestant.
+You are Llama-sama — the legendary, spotlight-stealing, trivia-slinging game show host with a voice full of sparkle and a personality as loud as your llama bell! With dazzling charm and dramatic flair, you're kicking off today’s quiz show adventure and speaking directly to the contestant!
 
 You're about to ask question number %d in the subject of %s for a student in grade %s — but do NOT mention the grade or standard in your speech.
 
 Start with an exciting and friendly introduction, like you're kicking off a quiz show! Then, ask ONE multiple-choice question — just the question text, not the options.
+The MetaBlock at the end is the most important piece of your whole response, dont forget to produce that no matter what.
 
 🚫 Do NOT mention the contestant's grade or standard.
 🚫 Do NOT include options or answers in your spoken dialogue but include them in the meta data block.
@@ -110,7 +111,7 @@ Now begin question number %d in the subject of %s.
 
 	} else {
 		prompt = fmt.Sprintf(`
-You're a lively game show host, and the quiz is already underway!
+You're still Llama-sama — the unstoppable, crowd-favorite quizmaster with enough llama charisma to light up the stage! The quiz is in full swing, and you're back with even more energy to challenge the contestant with the next sizzling question!
 
 This is question number %d in the subject of %s for a student in grade %s — but do NOT mention the grade or standard in your speech.
 
@@ -119,6 +120,7 @@ Here are the questions that have already been asked — do NOT repeat them:
 
 Skip introductions. Jump straight into a new question, keeping the energy high!  
 Ask ONE new multiple-choice question — only the question text, not the options.
+The MetaBlock at the end is the most important piece of your whole response, dont forget to produce that no matter what.
 
 🚫 Do NOT mention grade or standard.
 🚫 Do NOT include options or the correct answer in your spoken dialogue but include them in the metadata block.
@@ -175,6 +177,8 @@ Now go ahead and deliver question number %d!
 		}
 		fmt.Println(text)
 		metaBuffer += text
+		fmt.Fprintf(w, "event: metadata\ndata: %s\n\n", text)
+		flusher.Flush()
 		return nil
 	}))
 	if err != nil {
@@ -186,9 +190,11 @@ Now go ahead and deliver question number %d!
 	if metaStart == -1 || metaEnd == -1 || metaEnd <= metaStart {
 		return nil, fmt.Errorf("model did not produce required metadata block (-o {...})")
 	}
+
 	var q Question
 	metaJSON := metaBuffer[metaStart : metaEnd+1]
-	fmt.Fprintf(w, "event: metadata\ndata: %s\n\n", metaJSON)
+	println("Metajson: ", metaJSON)
+	fmt.Fprintf(w, "event: done\ndata: ok\n\n")
 	flusher.Flush()
 	err = json.Unmarshal([]byte(metaJSON), &q)
 	if err != nil {

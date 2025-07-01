@@ -1,7 +1,2 @@
-GET http://localhost:8080/user/question
-Content-Type: "application/json"
+GET /user/question?userId=683b28e6&correctResponses=2
 
-{
-    "user":"683b28e606b6f7781eca6e6a",
-	"correctResponses":0
-}
