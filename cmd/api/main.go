@@ -7,8 +7,15 @@ import (
 
 	"github.com/Farmaan-Malik/gollama-app/internals/db"
 	"github.com/Farmaan-Malik/gollama-app/internals/store"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
+
+var Validate *validator.Validate
+
+func init() {
+	Validate = validator.New(validator.WithRequiredStructEnabled())
+}
 
 func main() {
 	err := godotenv.Load()

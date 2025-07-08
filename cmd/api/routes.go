@@ -28,48 +28,61 @@ func (a *Api) SignupUserHandler(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"success": false, "message": err})
 		return
 	}
-	token, err := a.Store.UserStore.CreateUser(u)
+	if err := Validate.Struct(u); err != nil {
+		fmt.Println("error validating: ", err)
+		ctx.JSON(400, gin.H{"success": false, "message": "please enter all the fields"})
+		return
+	}
+	id, token, err := a.Store.UserStore.CreateUser(u)
 	if err != nil {
 		fmt.Println("error while creating document ")
 		ctx.JSON(400, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	ctx.JSON(201, gin.H{"success": true, "token": token})
+	ctx.JSON(201, gin.H{"success": true, "token": token, "ID": id})
 }
 
 func (a *Api) LoginUserHandler(ctx *gin.Context) {
 	var payload *store.LoginPayload
 	err := ctx.ShouldBindJSON(&payload)
 	if err != nil {
+		fmt.Println("Error logging in: ", err)
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
+		return
+	}
+	if err := Validate.Struct(payload); err != nil {
+		fmt.Println("error validating: ", err)
+		ctx.JSON(400, gin.H{"success": false, "message": "please enter all the fields"})
 		return
 	}
 	//token
-	token, err := a.Store.UserStore.LoginUser(payload)
+	user, token, err := a.Store.UserStore.LoginUser(payload)
 	if err != nil {
+		fmt.Println("Error logging in: ", err)
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	ctx.JSON(200, gin.H{"success": true, "message": "user logged in successfully", "token": token})
+	ctx.JSON(200, gin.H{"success": true, "data": user, "token": token})
 }
 
 func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 	var payload *store.InititalPrompt
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		fmt.Println("Error getting Initial Data: ", err)
 		ctx.JSON(401, gin.H{"success": false, "message": "incorrect data format"})
 		return
 	}
 	if err := a.Store.ModelStore.GetInitialData(payload); err != nil {
-		fmt.Println(err)
+		fmt.Println("Error getting Initial Data: ", err)
 		ctx.JSON(500, gin.H{"success": false, "message": "error saving initial data"})
 		return
 	}
 	data, err := a.Store.ModelStore.GetAllH(ctx, payload.UserId)
 	if err != nil {
+		fmt.Println("Error getting Initial Data: ", err)
 		ctx.JSON(500, gin.H{"success": false, "message": "error fetching data from redis"})
 		return
 	}
-	fmt.Println("Data: ", data)
 	ctx.JSON(200, gin.H{"success": true, "message": "initial data recieved", "data": data})
 }
 
@@ -86,6 +99,7 @@ func (a *Api) GetQuestionHandler(ctx *gin.Context) {
 	correct, err := strconv.Atoi(correctStr)
 	fmt.Println("second")
 	if err != nil {
+		fmt.Println("Error getting Question: ", err)
 		ctx.JSON(400, gin.H{"success": false, "message": "correctResponses must be a number"})
 		return
 	}
