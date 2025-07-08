@@ -1,8 +1,9 @@
 POST http://localhost:8080/user/initial
-Content-Type: "application/json"
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHb0xsYW1hIiwibmFtZSI6IiIsInVzZXJJZCI6IjY4M2IyOGU2MDZiNmY3NzgxZWNhNmU2YSJ9.iNPI1uhtw32BdJ24SPAz5nTD0V0UCbdGJdG2B1MwMpY
 
 {
-	"user":  "683b28e606b6f7781eca6e6a",
+	"user":  "683b28e606b6f7781eca6e6b",
 	"standard": "7",
 	"subject":  "English"
 }

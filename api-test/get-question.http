@@ -1,2 +1,3 @@
-GET /user/question?userId=683b28e6&correctResponses=2
-
+GET http://localhost:8080/user/question?userId=683b28e606b6f7781eca6e6b&correctResponses=2
+Accept: text/event-stream
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJHb0xsYW1hIiwibmFtZSI6IiIsInVzZXJJZCI6IjY4M2IyOGU2MDZiNmY3NzgxZWNhNmU2YSJ9.iNPI1uhtw32BdJ24SPAz5nTD0V0UCbdGJdG2B1MwMpY

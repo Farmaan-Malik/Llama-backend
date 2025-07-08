@@ -6,13 +6,12 @@ import (
 
 	"github.com/chenmingyong0423/go-mongox/v2"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Store struct {
 	UserStore interface {
-		CreateUser(u *User) (*mongo.InsertOneResult, error)
-		LoginUser(p *LoginPayload) (bool, error)
+		CreateUser(u *User) (string, error)
+		LoginUser(p *LoginPayload) (string, error)
 	}
 	ModelStore interface {
 		GetQuestion(w http.ResponseWriter, ctx context.Context, a *Ask) (*Question, error)

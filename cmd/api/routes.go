@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Farmaan-Malik/gollama-app/cmd/api/middlewares"
 	"github.com/Farmaan-Malik/gollama-app/internals/store"
+
 	"github.com/gin-gonic/gin"
 )
 
 func (a *Api) RegisterRoutes(e *gin.Engine) {
-	r := e.Group("/user")
-	r.POST("/signup", a.SignupUserHandler)
-	r.POST("/login", a.LoginUserHandler)
-	r.POST("/initial", a.GetInitialDataHandler)
-	r.GET("/question", a.GetQuestionHandler)
+	e.POST("/signup", a.SignupUserHandler)
+	e.POST("/login", a.LoginUserHandler)
+	authenticated := e.Group("/user")
+	authenticated.Use(middlewares.Authentication)
+	authenticated.POST("/initial", a.GetInitialDataHandler)
+	authenticated.GET("/question", a.GetQuestionHandler)
 }
 
 func (a *Api) SignupUserHandler(ctx *gin.Context) {
@@ -25,13 +28,13 @@ func (a *Api) SignupUserHandler(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"success": false, "message": err})
 		return
 	}
-	doc, err := a.Store.UserStore.CreateUser(u)
+	token, err := a.Store.UserStore.CreateUser(u)
 	if err != nil {
 		fmt.Println("error while creating document ")
-		ctx.JSON(400, gin.H{"success": false, "message": fmt.Sprint(err), "data": doc})
+		ctx.JSON(400, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	ctx.JSON(201, gin.H{"success": true, "data": doc})
+	ctx.JSON(201, gin.H{"success": true, "token": token})
 }
 
 func (a *Api) LoginUserHandler(ctx *gin.Context) {
@@ -41,13 +44,13 @@ func (a *Api) LoginUserHandler(ctx *gin.Context) {
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	_, err = a.Store.UserStore.LoginUser(payload)
+	//token
+	token, err := a.Store.UserStore.LoginUser(payload)
 	if err != nil {
 		ctx.JSON(401, gin.H{"success": false, "message": fmt.Sprint(err)})
 		return
 	}
-	ctx.JSON(200, gin.H{"success": true, "message": "user logged in successfully"})
-
+	ctx.JSON(200, gin.H{"success": true, "message": "user logged in successfully", "token": token})
 }
 
 func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
@@ -72,16 +75,18 @@ func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 
 func (a *Api) GetQuestionHandler(ctx *gin.Context) {
 	userId := ctx.Query("userId")
+	fmt.Println("First")
+	if userId == "" {
+		println(userId)
+		ctx.JSON(400, gin.H{"success": false, "message": "invalid userId"})
+		return
+	}
 	correctStr := ctx.DefaultQuery("correctResponses", "0")
 
 	correct, err := strconv.Atoi(correctStr)
+	fmt.Println("second")
 	if err != nil {
 		ctx.JSON(400, gin.H{"success": false, "message": "correctResponses must be a number"})
-		return
-	}
-
-	if userId == "" {
-		ctx.JSON(400, gin.H{"success": false, "message": "userId is required"})
 		return
 	}
 
@@ -90,6 +95,7 @@ func (a *Api) GetQuestionHandler(ctx *gin.Context) {
 		CorrectResponses: correct,
 	}
 
+	fmt.Println("third")
 	// Setup SSE headers
 	ctx.Writer.Header().Set("Content-Type", "text/event-stream")
 	ctx.Writer.Header().Set("Cache-Control", "no-cache")

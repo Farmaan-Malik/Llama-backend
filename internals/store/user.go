@@ -33,41 +33,52 @@ type LoginPayload struct {
 	Password string `json:"password"`
 }
 
-func (s *UserStore) CreateUser(u *User) (*mongo.InsertOneResult, error) {
+func (s *UserStore) CreateUser(u *User) (string, error) {
 
 	exists, err := s.UserCol.Finder().Filter(query.Eq("email", u.Email)).FindOne(context.Background())
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			fmt.Println("User Doesnt exist")
 		} else {
-			return nil, err
+			return "", err
 		}
 	}
 	if exists != nil {
 		fmt.Println("User already exists")
-		return nil, errors.New("user with this email already exists")
+		return "", errors.New("user with this email already exists")
 	}
 	hashedPassword, err := utils.HashPassword(u.Password)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	u.Password = hashedPassword
 	result, err := s.UserCol.Creator().InsertOne(context.Background(), u)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return result, nil
+	id := result.InsertedID.(bson.ObjectID)
+	token, err := utils.CreateJwt(utils.JwtPayload{
+		UserId:   id.Hex(),
+		UserName: u.Username,
+	})
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
-func (s *UserStore) LoginUser(p *LoginPayload) (bool, error) {
+func (s *UserStore) LoginUser(p *LoginPayload) (string, error) {
 	col := s.UserCol
-	exists, err := col.Finder().Filter(query.Eq("email", p.Email)).FindOne(context.Background())
+	user, err := col.Finder().Filter(query.Eq("email", p.Email)).FindOne(context.Background())
 	if err != nil {
-		return false, errors.New("incorrect user/password")
+		return "", errors.New("incorrect user/password")
 	}
-	err = utils.CompareHash(p.Password, exists.Password)
+	err = utils.CompareHash(p.Password, user.Password)
 	if err != nil {
-		return false, err
+		return "", err
 	}
-	return true, nil
+	token, err := utils.CreateJwt(utils.JwtPayload{
+		UserId: user.ID.Hex(),
+	})
+	return token, nil
 }
