@@ -16,7 +16,7 @@ type Store struct {
 	}
 	ModelStore interface {
 		GetQuestion(w http.ResponseWriter, ctx context.Context, a *Ask) (*Question, error)
-		GetInitialData(i *InititalPrompt) error
+		GetInitialData(ctx context.Context, i *InititalPrompt) error
 		GetAllH(ctx context.Context, key string) (map[string]string, error)
 	}
 }

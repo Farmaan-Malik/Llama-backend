@@ -72,7 +72,7 @@ func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 		ctx.JSON(401, gin.H{"success": false, "message": "incorrect data format"})
 		return
 	}
-	if err := a.Store.ModelStore.GetInitialData(payload); err != nil {
+	if err := a.Store.ModelStore.GetInitialData(ctx, payload); err != nil {
 		fmt.Println("Error getting Initial Data: ", err)
 		ctx.JSON(500, gin.H{"success": false, "message": "error saving initial data"})
 		return
@@ -87,8 +87,9 @@ func (a *Api) GetInitialDataHandler(ctx *gin.Context) {
 }
 
 func (a *Api) GetQuestionHandler(ctx *gin.Context) {
-	userId := ctx.Query("userId")
+
 	fmt.Println("First")
+	userId := ctx.Query("userId")
 	if userId == "" {
 		println(userId)
 		ctx.JSON(400, gin.H{"success": false, "message": "invalid userId"})
@@ -118,6 +119,8 @@ func (a *Api) GetQuestionHandler(ctx *gin.Context) {
 
 	_, err = a.Store.ModelStore.GetQuestion(ctx.Writer, context.Background(), payload)
 	if err != nil {
+		fmt.Println("Error: ", err)
+		// ctx.JSON(401, gin.H{"success": false, "error": err})
 		fmt.Fprintf(ctx.Writer, "event: error\ndata: %s\n\n", err.Error())
 		ctx.Writer.Flush()
 	}
