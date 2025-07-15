@@ -25,21 +25,30 @@ services:
     depends_on:
       - mongo-db
 
-  # ollama:
-  #   image: ollama/ollama
-  #   ports:
-  #     - 11434:11434
-  #   volumes:
-  #     - ./Modelfile:/Modelfile
-  #     - ollama_models:/root/.ollama
-  #   entrypoint: [
-  #     "/bin/sh", "-c", "
-  #     ollama serve &
-  #     tail -f /dev/null
-  #     "]
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+  gollama-server:
+    image: gollama-binary
+    ports:
+      - 8080:8080
+    depends_on:
+      - mongo-db
+      - redis
+      - mongo-express
+    restart: unless-stopped
+    env_file:
+      - .env
 
 volumes:
   mongodata:
     driver: local
   ollama_models:
+    driver: local
+  redisdata:
     driver: local

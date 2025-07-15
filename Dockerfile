@@ -1,11 +1,21 @@
-FROM golang:1.23-alpine
-
-COPY . /app/
+FROM golang:1.23-alpine as build
 
 WORKDIR /app
 
-RUN go mod tidy
+COPY ./go.mod ./go.sum /app/
 
-RUN go build -o bin/build/gollama ./main.go
 
-CMD ["./bin/build/gollama"]
+RUN go mod download
+
+COPY . /app/
+
+RUN go build -o bin/build/gollama ./cmd/api
+
+FROM alpine
+
+COPY --from=build /app/bin/build/gollama /app/
+# COPY --from=build /app/.env /app/.env
+
+EXPOSE 8080
+
+CMD ["/app/gollama"]

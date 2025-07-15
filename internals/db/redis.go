@@ -22,6 +22,6 @@ func InitRedis(redisPassword string, addr string) *redis.Client {
 		Protocol: 2,
 	})
 	status := client.Ping(context.Background())
-	fmt.Println(status)
+	fmt.Println("REDIS: ", status)
 	return client
 }
